@@ -610,6 +610,12 @@ require('lazy').setup({
         -- gopls = {},
         pyright = {},
         vls = {},
+        eslint = {
+          on_attach = function(client, buffr)
+            client.server_capabilities.documentFormattingProvider = true
+            client.server_capabilities.documentRangeFormattingProvider = true
+          end,
+        },
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
