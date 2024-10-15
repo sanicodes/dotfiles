@@ -168,3 +168,10 @@ On macOS, symbolic links are created similarly to Linux since it's a Unix-based 
 ---
 
 By following these instructions, you should be able to create symbolic links on your operating system of choice.
+
+---
+
+## IMPORTANT REFERENCES
+- [How to install zsh on windows](https://medium.com/@leomaurodesenv/setting-up-your-git-bash-zsh-terminals-on-windows-fa94871f440d)
+- [Nerd Fonts](https://www.nerdfonts.com/font-downloads)
+- [Dotfiles tutorials](https://dotfiles.github.io/)
