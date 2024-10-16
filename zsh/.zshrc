@@ -119,3 +119,8 @@ unset ZSH_AUTOSUGGEST_USE_ASYNC
 
 export PATH="$PATH:/opt/nvim-linux64/bin"
 
+# PYENV
+# NOTE: THIS REQUIRES A PYENV INSTALLATION
+export PYENV_ROOT="$HOME/.pyenv"
+[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
