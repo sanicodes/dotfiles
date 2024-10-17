@@ -3,6 +3,7 @@
  - nvim
  - zsh
  - git
+ - kitty
 # How To's
 ## Get Started
   1. Install prerequisites and familiarize os folder structures.
@@ -175,3 +176,5 @@ By following these instructions, you should be able to create symbolic links on 
 - [How to install zsh on windows](https://medium.com/@leomaurodesenv/setting-up-your-git-bash-zsh-terminals-on-windows-fa94871f440d)
 - [Nerd Fonts](https://www.nerdfonts.com/font-downloads)
 - [Dotfiles tutorials](https://dotfiles.github.io/)
+- [INSTALL P10k - OHMYZSH](https://itsfoss.com/zsh-ubuntu/)
+- 
