@@ -1,9 +1,9 @@
 # DOTFILES
 # Prerequisites
- - nvim
- - zsh
- - git
- - kitty
+ - [nvim](https://neovim.io/)
+ - [zsh](https://github.com/ohmyzsh/ohmyzsh/wiki/Installing-ZSH)
+ - [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+ - [kitty](https://sw.kovidgoyal.net/kitty/)
 # How To's
 ## Get Started
   1. Install prerequisites and familiarize os folder structures.
@@ -177,4 +177,4 @@ By following these instructions, you should be able to create symbolic links on 
 - [Nerd Fonts](https://www.nerdfonts.com/font-downloads)
 - [Dotfiles tutorials](https://dotfiles.github.io/)
 - [INSTALL P10k - OHMYZSH](https://itsfoss.com/zsh-ubuntu/)
-- 
+ 
