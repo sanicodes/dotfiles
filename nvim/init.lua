@@ -652,10 +652,16 @@ require('lazy').setup({
 
       -- You can add other tools here that you want Mason to install
       -- for you, so that they are available from within Neovim.
+      -- Auto installs the servers
       local ensure_installed = vim.tbl_keys(servers or {})
+      local linters = require('lint').linters_by_ft
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
       })
+      -- Extend ensure_installed with all linters from linters_by_ft
+      for _, linters_list in pairs(linters) do
+        vim.list_extend(ensure_installed, linters_list)
+      end
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
       require('mason-lspconfig').setup {
