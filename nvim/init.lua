@@ -909,15 +909,19 @@ require('lazy').setup({
   --
   --  Here are some example plugins that I've included in the Kickstart repository.
   --  Uncomment any of the lines below to enable them (you will need to restart nvim).
-  --
+
+  -- NOTE: KICKSTART DEFINED PLUGINS
   -- require 'kickstart.plugins.debug',
   require 'kickstart.plugins.indent_line',
   require 'kickstart.plugins.lint',
   require 'kickstart.plugins.autopairs',
   require 'kickstart.plugins.neo-tree',
   require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
-  require 'kickstart.colorschemes',
-  -- require 'kickstart.plugins.markdownpreview',
+
+  -- NOTE: USER ADDED PLUGINS
+  require 'custom.colorschemes',
+  -- require 'custom.plugins.comment', -- commented for now as it is not that used so much
+  -- require 'custom.plugins.markdownpreview', -- commented for now as it is not used so much
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
