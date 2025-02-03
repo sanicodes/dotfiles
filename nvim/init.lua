@@ -920,6 +920,7 @@ require('lazy').setup({
 
   -- NOTE: USER ADDED PLUGINS
   require 'custom.colorschemes',
+  require 'custom.plugins.bufferline',
   -- require 'custom.plugins.comment', -- commented for now as it is not that used so much
   -- require 'custom.plugins.markdownpreview', -- commented for now as it is not used so much
 
