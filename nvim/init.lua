@@ -917,6 +917,7 @@ require('lazy').setup({
   require 'kickstart.plugins.autopairs',
   require 'kickstart.plugins.neo-tree',
   require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
+  require 'kickstart.plugins.mason-workaround',
 
   -- NOTE: USER ADDED PLUGINS
   require 'custom.colorschemes',
