@@ -112,6 +112,23 @@ return {
           { name = 'nvim_lsp' },
           { name = 'luasnip' },
           { name = 'path' },
+          { name = 'buffer' },
+        },
+        formatting = {
+          format = function(entry, vim_item)
+            -- Add source name to completion menu
+            vim_item.menu = ({
+              nvim_lsp = '[LSP]',
+              luasnip = '[Snippet]',
+              buffer = '[Buffer]',
+              path = '[Path]',
+            })[entry.source.name]
+            return vim_item
+          end,
+        },
+        window = {
+          completion = cmp.config.window.bordered(),
+          documentation = cmp.config.window.bordered(),
         },
       }
     end,
