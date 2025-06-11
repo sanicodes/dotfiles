@@ -49,34 +49,52 @@ return {
         local os_name = vim.loop.os_uname().sysname
         return os_name
       end
+
+      -- Function to left-align text lines within centered footer
       local function left_align_footer(lines)
         local aligned_lines = {}
         local max_width = 0
 
-        -- First pass: find the maximum width (excluding empty lines)
+        -- First pass: find the maximum width (excluding empty lines and box characters)
         for _, line in ipairs(lines) do
-          if line ~= '' then
-            local visible_length = vim.fn.strdisplaywidth(line)
+          if line ~= '' and not line:match '^[╭├╰─│╮╯┤]+$' then
+            -- Remove box characters for width calculation
+            local content = line:gsub('[╭├╰─│╮╯┤]', ''):gsub('^ +', ''):gsub(' +$', '')
+            local visible_length = vim.fn.strdisplaywidth(content)
             max_width = math.max(max_width, visible_length)
           end
         end
 
-        -- Second pass: pad lines to align them to the left
-        for _, line in ipairs(lines) do
+        -- Set a minimum width for the box
+        local box_width = math.max(max_width + 8, 68) -- 4 chars padding on each side
+
+        -- Second pass: create properly aligned box
+        for i, line in ipairs(lines) do
           if line == '' then
             table.insert(aligned_lines, line)
+          elseif line:match '^╭' then
+            -- Top border
+            table.insert(aligned_lines, '╭' .. string.rep('─', box_width - 2) .. '╮')
+          elseif line:match '^├' then
+            -- Middle border
+            table.insert(aligned_lines, '├' .. string.rep('─', box_width - 2) .. '┤')
+          elseif line:match '^╰' then
+            -- Bottom border
+            table.insert(aligned_lines, '╰' .. string.rep('─', box_width - 2) .. '╯')
           else
-            local visible_length = vim.fn.strdisplaywidth(line)
-            local padding = max_width - visible_length
-            local aligned_line = line .. string.rep(' ', padding)
+            -- Content line
+            local content = line:gsub('^│ ?', ''):gsub(' ?│$', '')
+            local visible_length = vim.fn.strdisplaywidth(content)
+            local padding = box_width - 4 - visible_length -- 2 for borders, 2 for inner padding
+            local aligned_line = '│ ' .. content .. string.rep(' ', math.max(0, padding)) .. ' │'
             table.insert(aligned_lines, aligned_line)
           end
         end
 
         return aligned_lines
       end
-      require('dashboard').setup {
 
+      require('dashboard').setup {
         theme = 'doom',
         config = {
           week_header = {
@@ -144,41 +162,37 @@ return {
             local nvim_version = get_neovim_version()
             local os_info = get_system_info()
             local display_branch = branch
-            if branch and #branch > 20 then
-              display_branch = branch:sub(1, 17) .. '...'
+            if branch and #branch > 40 then
+              display_branch = branch:sub(1, 40) .. '...'
             end
+
             local footer_lines = {
               '',
-              '══════════════════════════════════════════════════════════════════',
-              '',
+              '╭─────────────────────────────────────────────────────────────────╮',
               -- Git status
-              branch and (' Branch: ' .. display_branch .. (git_changes > 0 and ' (' .. git_changes .. ' changes)' or ' (clean)'))
-                or '📝 Not a git repository',
-              ' ',
-              '  Directory: ' .. current_dir,
-              ' ',
-              '  Path: ' .. full_path,
-              ' ',
-              '──────────────────────────────────────────────────────────────────',
-              ' ',
-              '󱐋 Neovim loaded ' .. stats.loaded .. '/' .. stats.count .. ' plugins in ' .. ms .. 'ms',
-              ' ',
-              '──────────────────────────────────────────────────────────────────',
-              ' ',
-              '  Neovim v' .. nvim_version .. ' on ' .. os_info,
-              ' ',
-              '══════════════════════════════════════════════════════════════════',
+              branch and ('│  ' .. display_branch .. (git_changes > 0 and ' (' .. git_changes .. ' changes)' or ' (clean)') .. ' │')
+                or '│ 📝 Not a git repository │',
+              '├─────────────────────────────────────────────────────────────────┤',
+              '│   ' .. (full_path:len() > 55 and ('...' .. full_path:sub(-52)) or full_path) .. ' │',
+              '├─────────────────────────────────────────────────────────────────┤',
+              '│ 󱐋 Loaded ' .. stats.loaded .. '/' .. stats.count .. ' plugins in ' .. ms .. 'ms │',
+              '├─────────────────────────────────────────────────────────────────┤',
+              '│ 󱓞  Neovim v' .. nvim_version .. ' on ' .. os_info .. ' │',
+              '╰─────────────────────────────────────────────────────────────────╯',
             }
 
+            -- Left-align the footer text
             return left_align_footer(footer_lines)
           end,
         },
       }
 
-      -- Custom highlight groups
-      vim.api.nvim_set_hl(0, 'DashboardHeader', { fg = '#ffffff', bold = true })
-      vim.api.nvim_set_hl(0, 'DashboardFooter', { fg = '#E8E4C9', bold = true })
-      vim.api.nvim_set_hl(0, 'DashboardDesc', { fg = '#E8E4C9', bold = true })
+      -- Custom highlight groups with pastel white/cream colors
+      vim.api.nvim_set_hl(0, 'DashboardHeader', { fg = '#f5f5f5', bold = true }) -- Off-white header
+      vim.api.nvim_set_hl(0, 'DashboardFooter', { fg = '#e8e8e8', italic = true }) -- Light gray footer
+      vim.api.nvim_set_hl(0, 'DashboardDesc', { fg = '#f0f0f0' }) -- Soft white descriptions
+      vim.api.nvim_set_hl(0, 'DashboardIcon', { fg = '#d3d3d3' }) -- Light gray icons
+      vim.api.nvim_set_hl(0, 'DashboardKey', { fg = '#f8f8f2', bold = true }) -- Cream keybinds
     end,
     dependencies = { { 'nvim-tree/nvim-web-devicons' } },
   },
