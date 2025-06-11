@@ -49,7 +49,32 @@ return {
         local os_name = vim.loop.os_uname().sysname
         return os_name
       end
+      local function left_align_footer(lines)
+        local aligned_lines = {}
+        local max_width = 0
 
+        -- First pass: find the maximum width (excluding empty lines)
+        for _, line in ipairs(lines) do
+          if line ~= '' then
+            local visible_length = vim.fn.strdisplaywidth(line)
+            max_width = math.max(max_width, visible_length)
+          end
+        end
+
+        -- Second pass: pad lines to align them to the left
+        for _, line in ipairs(lines) do
+          if line == '' then
+            table.insert(aligned_lines, line)
+          else
+            local visible_length = vim.fn.strdisplaywidth(line)
+            local padding = max_width - visible_length
+            local aligned_line = line .. string.rep(' ', padding)
+            table.insert(aligned_lines, aligned_line)
+          end
+        end
+
+        return aligned_lines
+      end
       require('dashboard').setup {
 
         theme = 'doom',
@@ -125,7 +150,7 @@ return {
             local footer_lines = {
               '',
               '══════════════════════════════════════════════════════════════════',
-
+              '',
               -- Git status
               branch and (' Branch: ' .. display_branch .. (git_changes > 0 and ' (' .. git_changes .. ' changes)' or ' (clean)'))
                 or '📝 Not a git repository',
@@ -133,14 +158,19 @@ return {
               '  Directory: ' .. current_dir,
               ' ',
               '  Path: ' .. full_path,
+              ' ',
               '──────────────────────────────────────────────────────────────────',
+              ' ',
               '󱐋 Neovim loaded ' .. stats.loaded .. '/' .. stats.count .. ' plugins in ' .. ms .. 'ms',
+              ' ',
               '──────────────────────────────────────────────────────────────────',
+              ' ',
               '  Neovim v' .. nvim_version .. ' on ' .. os_info,
+              ' ',
               '══════════════════════════════════════════════════════════════════',
             }
 
-            return footer_lines
+            return left_align_footer(footer_lines)
           end,
         },
       }
