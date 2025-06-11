@@ -11,6 +11,45 @@ return {
         end,
       })
 
+      -- Helper functions for additional stats
+      local function get_git_branch()
+        local handle = io.popen 'git branch --show-current 2>/dev/null'
+        if handle then
+          local branch = handle:read('*a'):gsub('\n', '')
+          handle:close()
+          return branch ~= '' and branch or nil
+        end
+        return nil
+      end
+
+      local function get_git_status()
+        local handle = io.popen 'git status --porcelain 2>/dev/null | wc -l'
+        if handle then
+          local count = handle:read('*a'):gsub('\n', '')
+          handle:close()
+          return tonumber(count) or 0
+        end
+        return 0
+      end
+
+      local function get_current_directory()
+        return vim.fn.fnamemodify(vim.fn.getcwd(), ':t')
+      end
+
+      local function get_full_path()
+        return vim.fn.getcwd()
+      end
+
+      local function get_neovim_version()
+        local version = vim.version()
+        return string.format('%d.%d.%d', version.major, version.minor, version.patch)
+      end
+
+      local function get_system_info()
+        local os_name = vim.loop.os_uname().sysname
+        return os_name
+      end
+
       require('dashboard').setup {
 
         theme = 'doom',
@@ -40,6 +79,7 @@ return {
               desc = ' File Browser                     [\\]',
               action = 'Neotree toggle',
             },
+
             {
               icon = ' ',
               desc = ' Configuration                    [space][s][n]',
@@ -50,6 +90,7 @@ return {
               desc = ' Help Tags                        [space][s][h]',
               action = 'lua require("telescope.builtin").help_tags()',
             },
+
             {
               icon = '󰒲 ',
               desc = ' Lazy Package Manager             :Lazy',
@@ -68,19 +109,46 @@ return {
           },
           footer = function()
             local stats = require('lazy').stats()
-            local ms = (math.floor(stats.startuptime * 100 + 0.5) / 100)
-            return {
+            local ms = math.floor(stats.startuptime * 100 + 0.5) / 100
+
+            -- Gather system information
+            local branch = get_git_branch()
+            local git_changes = get_git_status()
+            local current_dir = get_current_directory()
+            local full_path = get_full_path()
+            local nvim_version = get_neovim_version()
+            local os_info = get_system_info()
+            local display_branch = branch
+            if branch and #branch > 20 then
+              display_branch = branch:sub(1, 17) .. '...'
+            end
+            local footer_lines = {
               '',
-              '⚡ Neovim loaded ' .. stats.loaded .. '/' .. stats.count .. ' plugins in ' .. ms .. 'ms',
-              '',
+              '══════════════════════════════════════════════════════════════════',
+
+              -- Git status
+              branch and (' Branch: ' .. display_branch .. (git_changes > 0 and ' (' .. git_changes .. ' changes)' or ' (clean)'))
+                or '📝 Not a git repository',
+              ' ',
+              '  Directory: ' .. current_dir,
+              ' ',
+              '  Path: ' .. full_path,
+              '──────────────────────────────────────────────────────────────────',
+              '󱐋 Neovim loaded ' .. stats.loaded .. '/' .. stats.count .. ' plugins in ' .. ms .. 'ms',
+              '──────────────────────────────────────────────────────────────────',
+              '  Neovim v' .. nvim_version .. ' on ' .. os_info,
+              '══════════════════════════════════════════════════════════════════',
             }
+
+            return footer_lines
           end,
         },
       }
 
+      -- Custom highlight groups
       vim.api.nvim_set_hl(0, 'DashboardHeader', { fg = '#ffffff', bold = true })
-      vim.api.nvim_set_hl(0, 'DashboardFooter', { fg = '#ffffff', bold = true })
-      vim.api.nvim_set_hl(0, 'DashboardDesc', { fg = '#ffffff', bold = true })
+      vim.api.nvim_set_hl(0, 'DashboardFooter', { fg = '#E8E4C9', bold = true })
+      vim.api.nvim_set_hl(0, 'DashboardDesc', { fg = '#E8E4C9', bold = true })
     end,
     dependencies = { { 'nvim-tree/nvim-web-devicons' } },
   },
