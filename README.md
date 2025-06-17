@@ -1,7 +1,6 @@
 # DOTFILES
 # Prerequisites
  - [nvim](https://neovim.io/)
- - [zsh](https://github.com/ohmyzsh/ohmyzsh/wiki/Installing-ZSH)
  - [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
  - [kitty](https://sw.kovidgoyal.net/kitty/)
 # How To's

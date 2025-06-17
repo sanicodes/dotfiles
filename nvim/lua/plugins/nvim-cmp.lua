@@ -115,11 +115,13 @@ return {
           { name = 'path' },
           { name = 'buffer' },
           { name = 'nvim_lsp_signature_help' },
+          { name = 'minuet' },
         },
         formatting = {
           format = function(entry, vim_item)
             -- Add source name to completion menu
             vim_item.menu = ({
+              minuet = '[AI]',
               nvim_lsp = '[LSP]',
               luasnip = '[Snippet]',
               buffer = '[Buffer]',
@@ -127,6 +129,13 @@ return {
             })[entry.source.name]
             return vim_item
           end,
+        },
+        performance = {
+          -- It is recommended to increase the timeout duration due to
+          -- the typically slower response speed of LLMs compared to
+          -- other completion sources. This is not needed when you only
+          -- need manual completion.
+          fetching_timeout = 2000,
         },
         window = {
           completion = cmp.config.window.bordered(),
