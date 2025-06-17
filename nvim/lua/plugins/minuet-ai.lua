@@ -2,7 +2,15 @@ return {
   {
     'milanglacier/minuet-ai.nvim',
     config = function()
-      -- NOTE: Setup CODESTRAL_API_KEY in the zshrc or env variables
+      -- NOTE: Add CODESTRAL_API_KEY to env variables or bashrc/zshrc
+      -- NOTE: You can change the llm provider but we use codestral for now since it is free
+      local api_key = vim.env.CODESTRAL_API_KEY
+
+      if not api_key or api_key == '' then
+        vim.notify('⚠️ CODESTRAL_API_KEY not set. Skipping Minuet setup.', vim.log.levels.WARN)
+        return
+      end
+
       require('minuet').setup {
         provider_options = {
           codestral = {
