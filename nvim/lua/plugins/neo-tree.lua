@@ -19,7 +19,20 @@ return {
         window = {
           mappings = {
             ['\\'] = 'close_window',
+            ['P'] = {
+              'toggle_preview',
+              config = {
+                use_float = true,
+                -- use_image_nvim = true,
+                -- use_snacks_image = true,
+                -- title = 'Neo-tree Preview',
+              },
+            },
           },
+        },
+        follow_current_file = {
+          enabled = true,
+          leave_dirs_open = true,
         },
       },
     },
