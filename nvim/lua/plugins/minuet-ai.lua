@@ -19,7 +19,7 @@ return {
             stream = true,
             optional = {
               max_tokens = 512,
-              stop = { '\n\n' },
+              -- stop = { '\n\n' }, But Codestral’s FIM API sometimes returns completions wrapped in objects, not plain text. Try removing or simplifying stop, so Minuet doesn’t choke:
             },
           },
         },
