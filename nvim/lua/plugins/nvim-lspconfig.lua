@@ -44,6 +44,18 @@ return {
       --    That is to say, every time a new file is opened that is associated with
       --    an lsp (for example, opening `main.rs` is associated with `rust_analyzer`) this
       --    function will be executed to configure the current buffer
+
+      vim.diagnostic.config {
+        virtual_text = {
+          prefix = '●', -- small icon before the text
+          spacing = 2,
+        },
+        signs = true, -- show gutter signs (on the left)
+        underline = true, -- underline errors in code
+        update_in_insert = false, -- don't update while typing
+        severity_sort = true, -- sort errors by severity
+      }
+
       vim.api.nvim_create_autocmd('LspAttach', {
         group = vim.api.nvim_create_augroup('kickstart-lsp-attach', { clear = true }),
         callback = function(event)
