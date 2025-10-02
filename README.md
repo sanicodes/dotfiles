@@ -176,4 +176,5 @@ By following these instructions, you should be able to create symbolic links on 
 - [Nerd Fonts](https://www.nerdfonts.com/font-downloads)
 - [Dotfiles tutorials](https://dotfiles.github.io/)
 - [INSTALL P10k - OHMYZSH](https://itsfoss.com/zsh-ubuntu/)
+- [Maple Font](https://github.com/subframe7536/maple-font/releases)
  
