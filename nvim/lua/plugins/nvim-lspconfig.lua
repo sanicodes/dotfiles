@@ -182,6 +182,7 @@ return {
           end,
         },
         ts_ls = {},
+        vuels = {},
         lua_ls = {
           -- cmd = {...},
           -- filetypes = { ...},
