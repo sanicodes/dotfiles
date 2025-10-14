@@ -3,15 +3,14 @@ return {
   -- https://github.com/folke/sidekick.nvim.git
   {
     'folke/sidekick.nvim',
-    opts = {
-      -- add any options here
-      cli = {
-        mux = {
-          backend = 'tmux',
-          enabled = true,
-        },
-      },
-    },
+    -- opts = {
+    --   -- add any options here
+    --   cli = {
+    --     mux = {
+    --       enabled = true,
+    --     },
+    --   },
+    -- },
     keys = {
       {
         '<tab>',

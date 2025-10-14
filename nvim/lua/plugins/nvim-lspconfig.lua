@@ -115,26 +115,45 @@ return {
           --    See `:help CursorHold` for information about when this is executed
           --
           -- When you move your cursor, the highlights will be cleared (the second autocommand).
+
           local client = vim.lsp.get_client_by_id(event.data.client_id)
+
+          -- Only create the autocmds if highlight is supported
           if client and client.supports_method(vim.lsp.protocol.Methods.textDocument_documentHighlight) then
-            local highlight_augroup = vim.api.nvim_create_augroup('kickstart-lsp-highlight', { clear = false })
+            local highlight_group = vim.api.nvim_create_augroup('lsp-highlight-' .. event.buf, { clear = true })
+
             vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
               buffer = event.buf,
-              group = highlight_augroup,
-              callback = vim.lsp.buf.document_highlight,
+              group = highlight_group,
+              callback = function()
+                -- EXTRA SAFETY: check again at runtime
+                for _, c in ipairs(vim.lsp.get_clients { bufnr = event.buf }) do
+                  if c.supports_method(vim.lsp.protocol.Methods.textDocument_documentHighlight) then
+                    vim.lsp.buf.document_highlight()
+                    return
+                  end
+                end
+              end,
             })
 
             vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, {
               buffer = event.buf,
-              group = highlight_augroup,
-              callback = vim.lsp.buf.clear_references,
+              group = highlight_group,
+              callback = function()
+                for _, c in ipairs(vim.lsp.get_clients { bufnr = event.buf }) do
+                  if c.supports_method(vim.lsp.protocol.Methods.textDocument_documentHighlight) then
+                    vim.lsp.buf.clear_references()
+                    return
+                  end
+                end
+              end,
             })
 
             vim.api.nvim_create_autocmd('LspDetach', {
-              group = vim.api.nvim_create_augroup('kickstart-lsp-detach', { clear = true }),
-              callback = function(event2)
+              group = vim.api.nvim_create_augroup('lsp-detach-' .. event.buf, { clear = true }),
+              callback = function()
                 vim.lsp.buf.clear_references()
-                vim.api.nvim_clear_autocmds { group = 'kickstart-lsp-highlight', buffer = event2.buf }
+                vim.api.nvim_clear_autocmds { group = highlight_group, buffer = event.buf }
               end,
             })
           end
@@ -166,34 +185,13 @@ return {
       --  - capabilities (table): Override fields in capabilities. Can be used to disable certain LSP features.
       --  - settings (table): Override the default settings passed when initializing the server.
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
+
+      -- Define your LSPs here
+      -- NOTE: this will be automatically installed by mason
       local servers = {
-        -- clangd = {},
-        -- gopls = {},
-        -- rust_analyzer = {},
-        -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
-        --
-        -- Some languages (like typescript) have entire language plugins that can be useful:
-        --    https://github.com/pmizio/typescript-tools.nvim
-        --
-        -- But for many setups, the LSP (`ts_ls`) will work just fine
         emmet_ls = {},
         pyright = {},
-        ts_ls = {},
-        vtsls = {
-          filetypes = { 'vue' },
-          on_attach = function(client, bufnr)
-            -- Disable formatting for vtsls (use eslint or prettier instead)
-            client.server_capabilities.documentFormattingProvider = false
-            client.server_capabilities.documentRangeFormattingProvider = false
-            client.server_capabilities.documentHighlight = false
-          end,
-        },
-        vue_ls = {
-          on_attach = function(client, buffr)
-            client.server_capabilities.documentFormattingProvider = false
-            client.server_capabilities.documentRangeFormattingProvider = false
-          end,
-        },
+        vtsls = {},
         eslint = {
           on_attach = function(client, buffr)
             client.server_capabilities.documentFormattingProvider = true
@@ -210,36 +208,27 @@ return {
           },
         },
       }
-
-      -- Ensure the servers and tools above are installed
-      --  To check the current status of installed tools and/or manually install
-      --  other tools, you can run
-      --    :Mason
-      --
-      --  You can press `g?` for help in this menu.
-      require('mason').setup()
-
-      -- You can add other tools here that you want Mason to install
-      -- for you, so that they are available from within Neovim.
-      -- Auto installs the servers
+      -- Auto installs the servers and linters
       local ensure_installed = vim.tbl_keys(servers or {})
       local linters = require('lint').linters_by_ft
+      -- add other tools to ensure_installed
       vim.list_extend(ensure_installed, {
-        'stylua', -- Used to format Lua code
+        'stylua',
       })
       -- Extend ensure_installed with all linters from linters_by_ft
       for _, linters_list in pairs(linters) do
         vim.list_extend(ensure_installed, linters_list)
       end
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
-
+      -- Setup mason
+      require('mason').setup()
       -- Pre-configure servers BEFORE mason-lspconfig runs automatic_enable
       for server_name, server_config in pairs(servers) do
         local server = vim.tbl_deep_extend('force', {}, server_config)
         server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
         vim.lsp.config(server_name, server)
       end
-
+      -- Setup mason-lspconfig
       require('mason-lspconfig').setup {}
     end,
   },
