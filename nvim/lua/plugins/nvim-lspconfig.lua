@@ -157,7 +157,6 @@ return {
       --  So, we create new capabilities with nvim cmp, and then broadcast that to the servers.
       local capabilities = vim.lsp.protocol.make_client_capabilities()
       capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
-
       -- Enable the following language servers
       --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
       --
@@ -179,18 +178,27 @@ return {
         -- But for many setups, the LSP (`ts_ls`) will work just fine
         emmet_ls = {},
         pyright = {},
+        ts_ls = {},
+        vtsls = {
+          filetypes = { 'vue' },
+          on_attach = function(client, bufnr)
+            -- Disable formatting for vtsls (use eslint or prettier instead)
+            client.server_capabilities.documentFormattingProvider = false
+            client.server_capabilities.documentRangeFormattingProvider = false
+            client.server_capabilities.documentHighlight = false
+          end,
+        },
+        vue_ls = {
+          on_attach = function(client, buffr)
+            client.server_capabilities.documentFormattingProvider = false
+            client.server_capabilities.documentRangeFormattingProvider = false
+          end,
+        },
         eslint = {
           on_attach = function(client, buffr)
             client.server_capabilities.documentFormattingProvider = true
             client.server_capabilities.documentRangeFormattingProvider = true
           end,
-        },
-        ts_ls = {},
-        vue_ls = {
-          filetypes = { 'vue' },
-          init_options = {
-            typescript = { server = 'never' }, -- disable TS requirement
-          },
         },
         lua_ls = {
           settings = {
@@ -225,20 +233,14 @@ return {
       end
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
-      require('mason-lspconfig').setup {
-        handlers = {
-          function(server_name)
-            local server = servers[server_name] or {}
-            server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
+      -- Pre-configure servers BEFORE mason-lspconfig runs automatic_enable
+      for server_name, server_config in pairs(servers) do
+        local server = vim.tbl_deep_extend('force', {}, server_config)
+        server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
+        vim.lsp.config(server_name, server)
+      end
 
-            -- Define/override config
-            vim.lsp.config(server_name, server)
-
-            -- Enable server
-            vim.lsp.enable(server_name)
-          end,
-        },
-      }
+      require('mason-lspconfig').setup {}
     end,
   },
 }
