@@ -14,6 +14,14 @@ return {
             delay = 200,
             reveal = { 'close' },
           },
+          offsets = {
+            {
+              filetype = 'neo-tree',
+              text = 'Explorer',
+              text_align = 'left',
+              separator = true,
+            },
+          },
         },
       }
     end,
