@@ -191,7 +191,6 @@ return {
       local servers = {
         emmet_ls = {},
         pyright = {},
-        vtsls = {},
         eslint = {
           on_attach = function(client, buffr)
             client.server_capabilities.documentFormattingProvider = true
