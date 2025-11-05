@@ -17,8 +17,33 @@ return {
   {
     'rebelot/kanagawa.nvim',
     priority = 1000,
-    init = function()
-      vim.cmd.colorscheme 'kanagawa-dragon' -- load the colorscheme on load
+    -- init = function()
+    --   vim.cmd.colorscheme 'kanagawa-dragon' -- load the colorscheme on load
+    -- end,
+  },
+  {
+    'navarasu/onedark.nvim',
+    priority = 1000, -- make sure to load this before all the other start plugins
+    config = function()
+      require('onedark').setup {
+        style = 'warmer',
+      }
+      -- Enable theme
+      -- require('onedark').load()
+    end,
+  },
+  {
+    'sainnhe/gruvbox-material',
+    priority = 1000,
+    config = function()
+      -- vim.o.background = 'light' -- or 'light' for light mode
+      vim.g.gruvbox_material_background = 'medium'
+      vim.g.gruvbox_material_foreground = 'original'
+      vim.g.gruvbox_material_enable_italic = 1
+      vim.g.gruvbox_material_enable_bold = 1
+      vim.g.gruvbox_material_cursor = 'auto'
+      vim.g.gruvbox_material_dim_inactive_windows = 1
+      vim.cmd.colorscheme 'gruvbox-material'
     end,
   },
 }

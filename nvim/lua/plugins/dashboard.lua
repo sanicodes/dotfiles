@@ -187,12 +187,24 @@ return {
         },
       }
 
-      -- Custom highlight groups with pastel white/cream colors
-      vim.api.nvim_set_hl(0, 'DashboardHeader', { fg = '#f5f5f5', bold = true }) -- Off-white header
-      vim.api.nvim_set_hl(0, 'DashboardFooter', { fg = '#e8e8e8', italic = true }) -- Light gray footer
-      vim.api.nvim_set_hl(0, 'DashboardDesc', { fg = '#f0f0f0' }) -- Soft white descriptions
-      vim.api.nvim_set_hl(0, 'DashboardIcon', { fg = '#d3d3d3' }) -- Light gray icons
-      vim.api.nvim_set_hl(0, 'DashboardKey', { fg = '#f8f8f2', bold = true }) -- Cream keybinds
+      -- Detect current background (set earlier by your colorscheme logic)
+      local is_dark = (vim.o.background == 'dark')
+
+      if is_dark then
+        -- Dark mode colors (lighter text on dark background)
+        vim.api.nvim_set_hl(0, 'DashboardHeader', { fg = '#f7f5f5', bold = true }) -- Off-white header
+        vim.api.nvim_set_hl(0, 'DashboardFooter', { fg = '#e8e8e8', italic = true }) -- Light gray footer
+        vim.api.nvim_set_hl(0, 'DashboardDesc', { fg = '#f0f0f0' }) -- Soft white descriptions
+        vim.api.nvim_set_hl(0, 'DashboardIcon', { fg = '#d3d3d3' }) -- Light gray icons
+        vim.api.nvim_set_hl(0, 'DashboardKey', { fg = '#f8f8f2', bold = true }) -- Cream keybinds
+      else
+        -- Light mode colors (darker text on bright background)
+        vim.api.nvim_set_hl(0, 'DashboardHeader', { fg = '#1c1c1c', bold = true })
+        vim.api.nvim_set_hl(0, 'DashboardFooter', { fg = '#444444', italic = true })
+        vim.api.nvim_set_hl(0, 'DashboardDesc', { fg = '#333333' })
+        vim.api.nvim_set_hl(0, 'DashboardIcon', { fg = '#4a4a4a' })
+        vim.api.nvim_set_hl(0, 'DashboardKey', { fg = '#000000', bold = true })
+      end
     end,
     dependencies = { { 'nvim-tree/nvim-web-devicons' } },
   },
