@@ -29,7 +29,7 @@ return {
             },
           },
           -- openai_compatible = {
-          --   open_router_key = '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',
+          --   open_router_key = '',
           --   end_point = 'https://openrouter.ai/api/v1/chat/completions',
           --   model = 'x-ai/grok-4.0-fast',
           --   name = 'Openrouter',
