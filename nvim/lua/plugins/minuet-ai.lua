@@ -28,6 +28,19 @@ return {
               -- stop = { '\n\n' }, But Codestral’s FIM API sometimes returns completions wrapped in objects, not plain text. Try removing or simplifying stop, so Minuet doesn’t choke:
             },
           },
+          -- openai_compatible = {
+          --   open_router_key = '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',
+          --   end_point = 'https://openrouter.ai/api/v1/chat/completions',
+          --   model = 'x-ai/grok-4.0-fast',
+          --   name = 'Openrouter',
+          --   optional = {
+          --     max_tokens = 1024, -- or whatever you want
+          --     top_p = 0.9,
+          --     provider = {
+          --       sort = 'throughput',
+          --     },
+          --   },
+          -- },
         },
       }
     end,
