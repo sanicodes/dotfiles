@@ -26,22 +26,33 @@ return {
     priority = 1000, -- make sure to load this before all the other start plugins
     config = function()
       require('onedark').setup {
-        style = 'warmer',
+        style = 'darker',
       }
       -- Enable theme
-      -- require('onedark').load()
+      require('onedark').load()
     end,
   },
-  {
-    'sainnhe/gruvbox-material',
-    priority = 1000,
-    config = function()
-      -- vim.o.background = 'light' -- or 'light' for light mode
-      vim.g.gruvbox_material_background = 'medium'
-      vim.g.gruvbox_material_foreground = 'original'
-      vim.g.gruvbox_material_cursor = 'auto'
-      vim.g.gruvbox_material_dim_inactive_windows = 1
-      vim.cmd.colorscheme 'gruvbox-material'
-    end,
-  },
+  -- {
+  --   'sainnhe/gruvbox-material',
+  --   priority = 1000,
+  --   config = function()
+  --     -- vim.o.background = 'light' -- or 'light' for light mode
+  --     vim.g.gruvbox_material_background = 'medium'
+  --     vim.g.gruvbox_material_foreground = 'original'
+  --     vim.g.gruvbox_material_cursor = 'auto'
+  --     vim.g.gruvbox_material_dim_inactive_windows = 1
+  --     -- vim.cmd.colorscheme 'gruvbox-material'
+  --   end,
+  -- },
+  -- {
+  --   'scottmckendry/cyberdream.nvim',
+  --   lazy = false,
+  --   priority = 1000,
+  --   config = function()
+  --     require('cyberdream').setup {
+  --       transparent = true,
+  --     }
+  --     vim.cmd.colorscheme 'cyberdream'
+  --   end,
+  -- },
 }
