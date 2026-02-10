@@ -3,14 +3,18 @@ return {
   -- https://github.com/folke/sidekick.nvim.git
   {
     'folke/sidekick.nvim',
-    -- opts = {
-    --   -- add any options here
-    --   cli = {
-    --     mux = {
-    --       enabled = true,
-    --     },
-    --   },
-    -- },
+    opts = {
+      -- add any options here
+      cli = {
+        -- mux = {
+        --   enabled = true,
+        -- },
+        -- the below code is to remove the deprecated warning for now
+        tools = {
+          codex = { cmd = { 'codex', '--search' } },
+        },
+      },
+    },
     keys = {
       {
         '<tab>',
