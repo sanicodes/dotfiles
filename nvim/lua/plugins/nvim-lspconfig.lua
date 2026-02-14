@@ -228,7 +228,9 @@ return {
         vim.lsp.config(server_name, server)
       end
       -- Setup mason-lspconfig
-      require('mason-lspconfig').setup {}
+      require('mason-lspconfig').setup {
+        automatic_enable = vim.tbl_keys(servers),
+      }
     end,
   },
 }
