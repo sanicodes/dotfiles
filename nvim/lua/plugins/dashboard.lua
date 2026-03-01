@@ -120,7 +120,7 @@ return {
             {
               icon = ' ',
               desc = ' File Browser                     [\\]',
-              action = 'Neotree toggle',
+              action = 'NvimTreeToggle',
             },
 
             {
