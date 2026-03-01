@@ -51,6 +51,9 @@ return {
           end,
         },
         completion = { completeopt = 'menu,menuone,noinsert' },
+        performance = {
+          fetching_timeout = 4000,
+        },
 
         -- For an understanding of why these mappings were
         -- chosen, you will need to read `:help ins-completion`
@@ -115,7 +118,7 @@ return {
           { name = 'path' },
           { name = 'buffer' },
           { name = 'nvim_lsp_signature_help' },
-          { name = 'minuet' },
+          { name = 'minuet', group_index = 1, priority = 110 },
         },
         formatting = {
           format = function(entry, vim_item)

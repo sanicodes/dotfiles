@@ -10,6 +10,44 @@
   3. Generate [Symlinks](https://github.com/sanicodes/dotfiles/edit/main/README.md#how-to-create-symbolic-links-in-windows-linux-and-macos) for chosen app folders.
   4. Check the configurations and folders. 
 
+## API Keys for Minuet (Neovim)
+
+Minuet reads API keys from environment variables. Add the keys you use to `~/.zshrc`:
+
+```bash
+export CODESTRAL_API_KEY="your_codestral_key"
+export OPENROUTER_API_KEY="your_openrouter_key"
+export OPENAI_API_KEY="your_openai_key"
+export GEMINI_API_KEY="your_gemini_key"
+export ANTHROPIC_API_KEY="your_anthropic_key"
+export DEEPSEEK_API_KEY="your_deepseek_key"
+```
+
+Reload your shell after editing `~/.zshrc`:
+
+```bash
+source ~/.zshrc
+```
+
+Quick verification:
+
+```bash
+echo "$CODESTRAL_API_KEY"
+echo "$OPENROUTER_API_KEY"
+echo "$OPENAI_API_KEY"
+echo "$GEMINI_API_KEY"
+echo "$ANTHROPIC_API_KEY"
+echo "$DEEPSEEK_API_KEY"
+```
+
+Provider selection behavior:
+
+- Preferred provider is `codestral` when `CODESTRAL_API_KEY` exists.
+- If it is missing, Minuet falls back in this order: `openai_compatible` (OpenRouter), `openai`, `gemini`, `claude`, then `openai_fim_compatible` (DeepSeek).
+- If no supported keys are present, Minuet is disabled with a warning instead of erroring.
+
+If you launch Neovim from a GUI app, make sure that app inherits your shell environment.
+
 ## How to Create Symbolic Links in Windows, Linux, and macOS
 
 - A symbolic link (also known as a symlink) is a file-system object that points to another file or directory. It allows you to access the target file or directory through the link, much like a shortcut. It makes maintaining a specific configuration to git much easier.
