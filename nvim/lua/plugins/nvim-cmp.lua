@@ -130,13 +130,6 @@ return {
             return vim_item
           end,
         },
-        performance = {
-          -- It is recommended to increase the timeout duration due to
-          -- the typically slower response speed of LLMs compared to
-          -- other completion sources. This is not needed when you only
-          -- need manual completion.
-          fetching_timeout = 2000,
-        },
         window = {
           completion = cmp.config.window.bordered(),
           documentation = cmp.config.window.bordered(),
