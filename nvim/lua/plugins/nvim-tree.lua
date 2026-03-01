@@ -25,7 +25,7 @@ return {
         },
 
         view = {
-          width = 45,
+          width = 35,
           preserve_window_proportions = true,
         },
 
@@ -34,15 +34,49 @@ return {
           indent_markers = {
             enable = true,
           },
+          icons = {
+            show = {
+              file = true,
+              folder = true,
+              folder_arrow = true,
+              git = true,
+              modified = true,
+            },
+            glyphs = {
+              default = '󰈚',
+              symlink = '',
+              bookmark = '󰆤',
+              folder = {
+                arrow_closed = '',
+                arrow_open = '',
+                default = '',
+                open = '',
+                empty = '',
+                empty_open = '',
+                symlink = '',
+                symlink_open = '',
+              },
+              git = {
+                unstaged = 'x',
+                staged = '✓',
+                unmerged = '',
+                renamed = '➜',
+                untracked = '★',
+                deleted = '',
+                ignored = '◌',
+              },
+            },
+          },
+        },
+
+        git = {
+          enable = true,
+          ignore = true,
         },
 
         filters = {
           dotfiles = true,
           git_ignored = true,
-        },
-
-        git = {
-          ignore = true,
         },
 
         update_focused_file = {
