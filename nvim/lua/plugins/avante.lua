@@ -48,8 +48,12 @@ return {
       -- this file can contain specific instructions for your project
       instructions_file = 'AGENTS.md',
       -- for example
-      provider = 'codex',
+      provider = 'bedrock',
       providers = {
+        bedrock = {
+          region = 'ap-southeast-1',
+          model = 'global.anthropic.claude-opus-4-6-v1',
+        },
         -- If you want to add custom providers here, kindly do so by uncommenting
         --  and changing the provider
         --   claude = {
@@ -72,7 +76,6 @@ return {
         --   },
         -- },
       },
-
     },
   },
 }
