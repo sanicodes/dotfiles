@@ -51,7 +51,7 @@ return {
       provider = 'bedrock',
       providers = {
         bedrock = {
-          region = 'ap-southeast-1',
+          aws_region = 'ap-southeast-1',
           model = 'global.anthropic.claude-opus-4-6-v1',
         },
         -- If you want to add custom providers here, kindly do so by uncommenting
