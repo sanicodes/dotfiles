@@ -1,14 +1,13 @@
 return {
   {
     'milanglacier/minuet-ai.nvim',
+    dependencies = { 'nvim-lua/plenary.nvim' },
     config = function()
       local has_key = function(env_name)
         local value = vim.env[env_name]
         return value ~= nil and value ~= ''
       end
 
-      -- Example:
-      -- Put in ~/.zshrc or ~/.bashrc: export OPENROUTER_API_KEY="your_key"
       local provider_env = {
         codestral = 'CODESTRAL_API_KEY',
         openai_compatible = 'OPENROUTER_API_KEY',
@@ -55,6 +54,16 @@ return {
         throttle = 2500,
         debounce = 500,
         n_completions = 1,
+        virtualtext = {
+          auto_trigger_ft = {},
+          keymap = {
+            accept = '<A-a>',
+            accept_line = '<A-l>',
+            next = '<A-]>',
+            prev = '<A-[>',
+            dismiss = '<A-e>',
+          },
+        },
         provider_options = {
           openai_compatible = {
             api_key = 'OPENROUTER_API_KEY',
@@ -64,9 +73,7 @@ return {
             stream = true,
             optional = {
               max_tokens = 1024,
-              provider = {
-                sort = 'throughput',
-              },
+              provider = { sort = 'throughput' },
             },
           },
           codestral = {
@@ -84,9 +91,7 @@ return {
             model = 'gpt-4.1-mini',
             end_point = 'https://api.openai.com/v1/chat/completions',
             stream = true,
-            optional = {
-              max_tokens = 256,
-            },
+            optional = { max_tokens = 256 },
           },
           gemini = {
             api_key = 'GEMINI_API_KEY',
@@ -94,9 +99,7 @@ return {
             end_point = 'https://generativelanguage.googleapis.com/v1beta/models',
             stream = true,
             optional = {
-              generationConfig = {
-                maxOutputTokens = 256,
-              },
+              generationConfig = { maxOutputTokens = 256 },
             },
           },
           claude = {
