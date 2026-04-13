@@ -105,12 +105,14 @@ local M_cfg = {
 
 --  STATE
 local state = {
-  buf       = nil,
-  win       = nil,
-  items     = {},
-  item_rows = {},
-  layout    = {},
-  last_row  = nil,
+  buf         = nil,
+  win         = nil,
+  items       = {},
+  item_rows   = {},
+  left_items  = {},
+  right_items = {},
+  layout      = {},
+  col_side    = 'left',
 }
 
 --  DATA FUNCTIONS
@@ -221,9 +223,11 @@ end
 --   item_rows  = sorted unique list of item rows (1-indexed)
 --   highlights = array of { row (0-indexed), col_start, col_end, group }
 local function build_lines(layout)
-  local lines      = {}
-  local items      = {}
-  local highlights = {}
+  local lines       = {}
+  local items       = {}
+  local left_items  = {}
+  local right_items = {}
+  local highlights  = {}
 
   local function add(text)
     table.insert(lines, text)
@@ -314,8 +318,20 @@ local function build_lines(layout)
         kind           = 'project',
         absolute       = p,
         action         = function()
+          -- Global cd so DirChanged fires for statusline / lualine / etc.
           vim.cmd('cd ' .. vim.fn.fnameescape(p))
-          pcall(vim.cmd, 'NvimTreeOpen')
+          -- Use the nvim-tree api directly: it force-loads the plugin (so it
+          -- works on the very first click even when nvim-tree is lazy-loaded
+          -- by command) and `change_root` makes the tree actually re-point at
+          -- the new project on every subsequent click instead of silently
+          -- staying on the previous one.
+          local ok, api = pcall(require, 'nvim-tree.api')
+          if ok then
+            pcall(api.tree.change_root, p)
+            pcall(api.tree.open)
+          else
+            pcall(vim.cmd, 'NvimTreeOpen')
+          end
         end,
         text_col_start = 2,
         text_col_end   = 2 + #shown,
@@ -335,7 +351,15 @@ local function build_lines(layout)
         text           = '  ' .. shown,
         kind           = 'file',
         absolute       = f,
-        action         = function() vim.cmd('edit ' .. vim.fn.fnameescape(f)) end,
+        action         = function()
+          -- cd to the file's git root (or its parent dir as a fallback) so
+          -- the cwd, statusline, and DirChanged listeners follow the file.
+          local dir = vim.fn.fnamemodify(f, ':h')
+          local git = vim.fs.find('.git', { path = dir, upward = true, limit = 1 })[1]
+          local root = git and vim.fn.fnamemodify(git, ':h') or dir
+          vim.cmd('cd ' .. vim.fn.fnameescape(root))
+          vim.cmd('edit ' .. vim.fn.fnameescape(f))
+        end,
         text_col_start = 2,
         text_col_end   = 2 + #shown,
       })
@@ -380,12 +404,15 @@ local function build_lines(layout)
       elseif lr.text then
         add_hl(row1 - 1, left_x + lr.key_col_start, left_x + lr.key_col_end, 'LaunchpadKey')
         add_hl(row1 - 1, left_x + lr.desc_col_start, left_x + lr.desc_col_end, 'LaunchpadAction')
-        table.insert(items, {
+        local left_item = {
           row      = row1,
+          col      = left_x + lr.key_col_start,
           col_side = 'left',
           key      = lr.key,
           action   = lr.action,
-        })
+        }
+        table.insert(items, left_item)
+        table.insert(left_items, left_item)
       end
     end
 
@@ -398,12 +425,15 @@ local function build_lines(layout)
       elseif rr.text then
         local group = rr.kind == 'project' and 'LaunchpadProject' or 'LaunchpadFile'
         add_hl(row1 - 1, right_byte_start + rr.text_col_start, right_byte_start + rr.text_col_end, group)
-        table.insert(items, {
+        local right_item = {
           row      = row1,
+          col      = right_byte_start + rr.text_col_start,
           col_side = 'right',
           key      = nil,
           action   = rr.action,
-        })
+        }
+        table.insert(items, right_item)
+        table.insert(right_items, right_item)
       end
     end
   end
@@ -470,10 +500,12 @@ local function build_lines(layout)
   table.sort(item_rows)
 
   return {
-    lines      = lines,
-    items      = items,
-    item_rows  = item_rows,
-    highlights = highlights,
+    lines       = lines,
+    items       = items,
+    item_rows   = item_rows,
+    left_items  = left_items,
+    right_items = right_items,
+    highlights  = highlights,
   }
 end
 
@@ -519,13 +551,24 @@ local function render()
 
   -- Shift item rows down too (they are 1-indexed)
   local shifted_items, shifted_item_rows = {}, {}
-  for _, it in ipairs(built.items) do
-    table.insert(shifted_items, {
+  local shifted_left_items, shifted_right_items = {}, {}
+  local function shift_item(it)
+    return {
       row      = it.row + top_pad,
+      col      = it.col,
       col_side = it.col_side,
       key      = it.key,
       action   = it.action,
-    })
+    }
+  end
+  for _, it in ipairs(built.items) do
+    table.insert(shifted_items, shift_item(it))
+  end
+  for _, it in ipairs(built.left_items) do
+    table.insert(shifted_left_items, shift_item(it))
+  end
+  for _, it in ipairs(built.right_items) do
+    table.insert(shifted_right_items, shift_item(it))
   end
   for _, r in ipairs(built.item_rows) do
     table.insert(shifted_item_rows, r + top_pad)
@@ -536,9 +579,11 @@ local function render()
   vim.bo[state.buf].modifiable = false
   apply_highlights(state.buf, shifted_highlights)
 
-  state.items     = shifted_items
-  state.item_rows = shifted_item_rows
-  state.layout    = layout
+  state.items       = shifted_items
+  state.item_rows   = shifted_item_rows
+  state.left_items  = shifted_left_items
+  state.right_items = shifted_right_items
+  state.layout      = layout
 end
 
 --  INTERACTION FUNCTIONS
@@ -565,31 +610,78 @@ local function setup_highlights()
   end
 end
 
--- Snap the cursor to the nearest item row in the direction of movement.
--- Uses state.last_row as a direction hint so `k` walks backward cleanly.
-local function snap_cursor()
-  if not state.buf or state.buf ~= vim.api.nvim_get_current_buf() then return end
-  if #state.item_rows == 0 then return end
+-- Return the active column's item list (left or right).
+local function active_list()
+  return state.col_side == 'left' and state.left_items or state.right_items
+end
+
+-- Find the index in `list` whose row is closest to `row`.
+local function index_for_row(list, row)
+  if #list == 0 then return 1 end
+  local best_i, best_dist = 1, math.huge
+  for i, item in ipairs(list) do
+    local d = math.abs(item.row - row)
+    if d < best_dist then best_i, best_dist = i, d end
+  end
+  return best_i
+end
+
+-- Move the cursor to list[idx], wrapping idx into [1, #list].
+local function goto_item(list, idx)
+  if #list == 0 then return end
+  if idx < 1 then idx = #list end
+  if idx > #list then idx = 1 end
+  local item = list[idx]
+  vim.api.nvim_win_set_cursor(state.win, { item.row, item.col })
+end
+
+-- Switch to the other column, landing on the item closest to the current row.
+-- No-op if the target column has no items (avoids stranding the cursor).
+local function switch_column(target_side)
+  if state.col_side == target_side then return end
+  local target_list = target_side == 'left' and state.left_items or state.right_items
+  if #target_list == 0 then return end
+  state.col_side = target_side
   local row = vim.api.nvim_win_get_cursor(state.win)[1]
-  if row == state.last_row then return end
-  local direction = (state.last_row and row > state.last_row) and 1 or -1
-  local target
-  if direction == 1 then
-    for _, r in ipairs(state.item_rows) do
-      if r >= row then target = r; break end
+  goto_item(target_list, index_for_row(target_list, row))
+end
+
+-- Snap the cursor onto the nearest valid item whenever it lands on empty
+-- space. Re-derives the active column from the cursor's x position so that
+-- arrow keys, mouse clicks, and other movement still feel natural.
+local snapping = false
+local function snap_to_item()
+  if snapping then return end
+  if not state.buf or state.buf ~= vim.api.nvim_get_current_buf() then return end
+  if not state.layout or not state.layout.left_x then return end
+
+  local row, col = unpack(vim.api.nvim_win_get_cursor(state.win))
+
+  -- If we're already exactly on a known item, nothing to do.
+  for _, item in ipairs(state.items) do
+    if item.row == row and item.col == col then
+      state.col_side = item.col_side
+      return
     end
-    target = target or state.item_rows[#state.item_rows]
-  else
-    for i = #state.item_rows, 1, -1 do
-      if state.item_rows[i] <= row then target = state.item_rows[i]; break end
-    end
-    target = target or state.item_rows[1]
   end
-  if target ~= row then
-    local col = vim.api.nvim_win_get_cursor(state.win)[2]
-    vim.api.nvim_win_set_cursor(state.win, { target, col })
+
+  -- Pick the target column based on where the cursor landed.
+  local split_col = state.layout.left_x + state.layout.col_w
+                    + math.floor(state.layout.col_gap / 2)
+  local target_side = col < split_col and 'left' or 'right'
+  local target_list = target_side == 'left' and state.left_items or state.right_items
+
+  -- Fall back to the other column if the preferred one is empty.
+  if #target_list == 0 then
+    target_side = target_side == 'left' and 'right' or 'left'
+    target_list = target_side == 'left' and state.left_items or state.right_items
   end
-  state.last_row = target
+  if #target_list == 0 then return end
+
+  state.col_side = target_side
+  snapping = true
+  pcall(goto_item, target_list, index_for_row(target_list, row))
+  snapping = false
 end
 
 -- Activate the item at the current cursor position. If multiple items share
@@ -609,16 +701,64 @@ local function on_enter()
   chosen.action()
 end
 
--- Install letter keybinds + <CR> + q + no-op editing keys. All buffer-local.
+-- Install letter keybinds + navigation + <CR> + q + no-op editing keys.
 local function setup_keymaps(buf)
   local opts = { buffer = buf, nowait = true, silent = true }
+
   for _, item in ipairs(state.items) do
     if item.key then
       vim.keymap.set('n', item.key, item.action, opts)
     end
   end
+
   vim.keymap.set('n', '<CR>', on_enter, opts)
   vim.keymap.set('n', 'q', function() vim.cmd('quit') end, opts)
+
+  -- Mouse: <LeftMouse> places the cursor (CursorMoved snaps to the nearest
+  -- item), then <LeftRelease> activates it. <2-LeftMouse> covers double-click.
+  vim.keymap.set('n', '<LeftRelease>',  on_enter, opts)
+  vim.keymap.set('n', '<2-LeftMouse>',  on_enter, opts)
+
+  -- Vertical navigation within the active column (wraps)
+  local function move_down()
+    local list = active_list()
+    if #list == 0 then return end
+    local row = vim.api.nvim_win_get_cursor(state.win)[1]
+    local idx = index_for_row(list, row)
+    if list[idx].row <= row then idx = idx + 1 end
+    goto_item(list, idx)
+  end
+
+  local function move_up()
+    local list = active_list()
+    if #list == 0 then return end
+    local row = vim.api.nvim_win_get_cursor(state.win)[1]
+    local idx = index_for_row(list, row)
+    if list[idx].row >= row then idx = idx - 1 end
+    goto_item(list, idx)
+  end
+
+  vim.keymap.set('n', 'j',      move_down, opts)
+  vim.keymap.set('n', 'k',      move_up,   opts)
+  vim.keymap.set('n', '<Down>', move_down, opts)
+  vim.keymap.set('n', '<Up>',   move_up,   opts)
+
+  vim.keymap.set('n', 'gg', function() goto_item(active_list(), 1) end, opts)
+  vim.keymap.set('n', 'G',  function() local l = active_list(); goto_item(l, #l) end, opts)
+
+  -- Column switching: h/l, arrow keys, plus Tab/S-Tab
+  local function go_left()  switch_column('left')  end
+  local function go_right() switch_column('right') end
+  vim.keymap.set('n', 'h',       go_left,  opts)
+  vim.keymap.set('n', 'l',       go_right, opts)
+  vim.keymap.set('n', '<Left>',  go_left,  opts)
+  vim.keymap.set('n', '<Right>', go_right, opts)
+  local function toggle_column()
+    switch_column(state.col_side == 'left' and 'right' or 'left')
+  end
+  vim.keymap.set('n', '<Tab>',   toggle_column, opts)
+  vim.keymap.set('n', '<S-Tab>', toggle_column, opts)
+
   for _, k in ipairs({ 'i', 'a', 'o', 'O', 'I', 'A', 'p', 'P', 'x', 'd' }) do
     vim.keymap.set('n', k, '<Nop>', opts)
   end
@@ -629,13 +769,13 @@ end
 local function setup_autocmds(buf)
   local group = vim.api.nvim_create_augroup('Launchpad_' .. buf, { clear = true })
 
-  vim.api.nvim_create_autocmd('CursorMoved', {
-    group = group, buffer = buf, callback = snap_cursor,
+  vim.api.nvim_create_autocmd({ 'CursorMoved', 'BufEnter' }, {
+    group = group, buffer = buf, callback = snap_to_item,
   })
   vim.api.nvim_create_autocmd('VimResized', {
     group = group, buffer = buf,
     callback = function()
-      if state.buf == vim.api.nvim_get_current_buf() then render() end
+      if state.buf == vim.api.nvim_get_current_buf() then render(); snap_to_item() end
     end,
   })
   vim.api.nvim_create_autocmd('BufWipeout', {
@@ -644,7 +784,7 @@ local function setup_autocmds(buf)
       pcall(vim.api.nvim_del_augroup_by_id, group)
       state.buf = nil
       state.win = nil
-      state.last_row = nil
+      state.col_side = 'left'
     end,
   })
 end
@@ -671,14 +811,20 @@ local function open()
   vim.wo[state.win].list           = false
   vim.wo[state.win].wrap           = false
 
+  state.col_side = 'left'
   render()
   setup_keymaps(buf)
   setup_autocmds(buf)
 
-  -- Park cursor on first item row if we have any
-  if state.item_rows[1] then
-    vim.api.nvim_win_set_cursor(state.win, { state.item_rows[1], 0 })
-    state.last_row = state.item_rows[1]
+  -- Park cursor on the first item in the active column. If the left column
+  -- is empty for some reason, fall back to the right column.
+  local list = state.left_items
+  if #list == 0 then
+    list = state.right_items
+    state.col_side = 'right'
+  end
+  if list[1] then
+    vim.api.nvim_win_set_cursor(state.win, { list[1].row, list[1].col })
   end
 end
 
