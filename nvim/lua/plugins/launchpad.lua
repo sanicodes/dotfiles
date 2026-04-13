@@ -1,81 +1,80 @@
 -- ============================================================================
 -- launchpad: custom Neovim startup dashboard
--- Replaces nvimdev/dashboard-nvim. Built incrementally — see
--- docs/superpowers/plans/2026-04-13-launchpad-dashboard.md
---
--- During the build (Tasks 1–13), launchpad runs side-by-side with the
--- existing dashboard-nvim plugin (whose spec is still returned at the bottom
--- of this file). Task 14 removes the old plugin entry.
+-- Local dashboard module loaded from lazy.nvim's plugin directory.
 -- ============================================================================
 
 --  CONFIG (populated in Task 2)
 -- Quick actions for the left column. Each entry becomes a clickable row.
 -- `action` is a function (not a command string) so it can be invoked directly.
 local M_actions = {
-  { key = 'f', icon = ' ', desc = 'Find File',     action = function() vim.cmd('Telescope find_files') end },
-  { key = 'r', icon = ' ', desc = 'Recent Files',  action = function() vim.cmd('Telescope oldfiles') end },
-  { key = 'g', icon = ' ', desc = 'Live Grep',     action = function() vim.cmd('Telescope live_grep') end },
-  { key = 'e', icon = ' ', desc = 'File Browser',  action = function() vim.cmd('NvimTreeToggle') end },
-  { key = 's', icon = ' ', desc = 'Git Status',    action = function() vim.cmd('Telescope git_status') end },
-  { key = 'c', icon = ' ', desc = 'Configuration', action = function()
+  { key = 'f', icon = '󰈞', desc = 'Find File',     action = function() vim.cmd('Telescope find_files') end },
+  { key = 'r', icon = '󰋚', desc = 'Recent Files',  action = function() vim.cmd('Telescope oldfiles') end },
+  { key = 'g', icon = '󰱼', desc = 'Live Grep',     action = function() vim.cmd('Telescope live_grep') end },
+  { key = 'e', icon = '󰙅', desc = 'File Browser',  action = function() vim.cmd('NvimTreeToggle') end },
+  { key = 's', icon = '󰊢', desc = 'Git Status',    action = function() vim.cmd('Telescope git_status') end },
+  { key = 'c', icon = '', desc = 'Configuration', action = function()
       require('telescope.builtin').find_files({ cwd = vim.fn.stdpath('config') })
     end },
-  { key = 'l', icon = '󰒲 ', desc = 'Lazy',          action = function() vim.cmd('Lazy') end },
-  { key = 'q', icon = ' ', desc = 'Quit',          action = function() vim.cmd('quit') end },
+  { key = 'l', icon = '󰒲', desc = 'Lazy',          action = function() vim.cmd('Lazy') end },
+  { key = 'q', icon = '󰈆', desc = 'Quit',          action = function() vim.cmd('quit') end },
 }
--- Day-of-week banners. Index 1 = Sunday, 7 = Saturday (matches os.date('%w') + 1).
--- Each banner is an array of strings, one per line. Keep each banner 5 lines tall
--- so the layout doesn't jump between days. Simple framed labels — swap these out
--- for fancier ASCII art by editing this table.
+-- Day banners. Index 1 = Sunday, 7 = Saturday (matches os.date('%w') + 1).
 local M_banners = {
-  { -- Sunday
-    '  ╭────────────────────────────╮  ',
-    '  │                            │  ',
-    '  │         ✦  SUNDAY  ✦       │  ',
-    '  │                            │  ',
-    '  ╰────────────────────────────╯  ',
+  {
+    '   _____                 __            ',
+    '  / ___/__  ______  ____/ /___ ___  __ ',
+    '  \\__ \\/ / / / __ \\/ __  / __ `/ / / / ',
+    ' ___/ / /_/ / / / / /_/ / /_/ / /_/ /  ',
+    '/____/\\__,_/_/ /_/\\__,_/\\__,_/\\__, /   ',
+    '                             /____/    ',
   },
-  { -- Monday
-    '  ╭────────────────────────────╮  ',
-    '  │                            │  ',
-    '  │         ◆  MONDAY  ◆       │  ',
-    '  │                            │  ',
-    '  ╰────────────────────────────╯  ',
+  {
+    '    __  ___                __            ',
+    '   /  |/  /___  ____  ____/ /___ ___  __ ',
+    '  / /|_/ / __ \\/ __ \\/ __  / __ `/ / / / ',
+    ' / /  / / /_/ / / / / /_/ / /_/ / /_/ /  ',
+    '/_/  /_/\\____/_/ /_/\\__,_/\\__,_/\\__, /   ',
+    '                               /____/    ',
   },
-  { -- Tuesday
-    '  ╭────────────────────────────╮  ',
-    '  │                            │  ',
-    '  │         ◇  TUESDAY  ◇      │  ',
-    '  │                            │  ',
-    '  ╰────────────────────────────╯  ',
+  {
+    '   ______                    __            ',
+    '  /_  __/_  _____  _________/ /___ ___  __ ',
+    '   / / / / / / _ \\/ ___/ __  / __ `/ / / / ',
+    '  / / / /_/ /  __(__  ) /_/ / /_/ / /_/ /  ',
+    ' /_/  \\__,_/\\___/____/\\__,_/\\__,_/\\__, /   ',
+    '                                  /____/   ',
   },
-  { -- Wednesday
-    '  ╭────────────────────────────╮  ',
-    '  │                            │  ',
-    '  │       ●  WEDNESDAY  ●      │  ',
-    '  │                            │  ',
-    '  ╰────────────────────────────╯  ',
+  {
+    ' _       __          __                    __            ',
+    '| |     / /__  ____/ /___  ___  _________/ /___ ___  __ ',
+    '| | /| / / _ \\/ __  / __ \\/ _ \\/ ___/ __  / __ `/ / / / ',
+    '| |/ |/ /  __/ /_/ / / / /  __(__  ) /_/ / /_/ / /_/ /  ',
+    '|__/|__/\\___/\\__,_/_/ /_/\\___/____/\\__,_/\\__,_/\\__, /   ',
+    '                                              /____/    ',
   },
-  { -- Thursday
-    '  ╭────────────────────────────╮  ',
-    '  │                            │  ',
-    '  │        ○  THURSDAY  ○      │  ',
-    '  │                            │  ',
-    '  ╰────────────────────────────╯  ',
+  {
+    '  ________                    __            ',
+    ' /_  __/ /_  __  ____________/ /___ ___  __ ',
+    '  / / / __ \\/ / / / ___/ ___/ / __ `/ / / / ',
+    ' / / / / / / /_/ / /  (__  ) / /_/ / /_/ /  ',
+    '/_/ /_/ /_/\\__,_/_/  /____/_/\\__,_/\\__, /   ',
+    '                                   /____/   ',
   },
-  { -- Friday
-    '  ╭────────────────────────────╮  ',
-    '  │                            │  ',
-    '  │         ★  FRIDAY  ★       │  ',
-    '  │                            │  ',
-    '  ╰────────────────────────────╯  ',
+  {
+    '    ______     _     __            ',
+    '   / ____/____(_)___/ /___ ___  __ ',
+    '  / /_  / ___/ / __  / __ `/ / / / ',
+    ' / __/ / /  / / /_/ / /_/ / /_/ /  ',
+    '/_/   /_/  /_/\\__,_/\\__,_/\\__, /   ',
+    '                         /____/    ',
   },
-  { -- Saturday
-    '  ╭────────────────────────────╮  ',
-    '  │                            │  ',
-    '  │        ☆  SATURDAY  ☆      │  ',
-    '  │                            │  ',
-    '  ╰────────────────────────────╯  ',
+  {
+    '   _____       __                 __            ',
+    '  / ___/____ _/ /___  ___________/ /___ ___  __ ',
+    '  \\__ \\/ __ `/ __/ / / / ___/ __  / __ `/ / / / ',
+    ' ___/ / /_/ / /_/ /_/ / /  / /_/ / /_/ / /_/ /  ',
+    '/____/\\__,_/\\__/\\__,_/_/   \\__,_/\\__,_/\\__, /   ',
+    '                                       /____/    ',
   },
 }
 local M_quotes = {
@@ -124,11 +123,24 @@ local function pick_quote()
   return M_quotes[(day_seed % #M_quotes) + 1]
 end
 
--- Pick a banner based on the current day of week. os.date('%w') returns
--- 0 for Sunday, so +1 makes it 1-indexed for Lua tables.
+local function center_text(text, width)
+  local pad = math.max(0, width - vim.fn.strdisplaywidth(text))
+  local left = math.floor(pad / 2)
+  local right = pad - left
+  return string.rep(' ', left) .. text .. string.rep(' ', right)
+end
+
+-- Render the current day as a fixed doom-style banner and add a date line.
 local function pick_banner()
   local wday = tonumber(os.date('%w')) + 1
-  return M_banners[wday]
+  local title = vim.deepcopy(M_banners[wday])
+  local width = 0
+  for _, line in ipairs(title) do
+    width = math.max(width, vim.fn.strdisplaywidth(line))
+  end
+  table.insert(title, '')
+  table.insert(title, center_text(os.date('%d %b %Y'), width))
+  return title
 end
 
 -- Return up to M_cfg.max_files unique readable paths from vim.v.oldfiles,
@@ -249,9 +261,10 @@ local function build_lines(layout)
   local banner = pick_banner()
   local banner_w = vim.fn.strdisplaywidth(banner[1])
   local banner_pad = layout.left_pad + math.max(0, math.floor((layout.total_w - banner_w) / 2))
-  for _, line in ipairs(banner) do
+  for i, line in ipairs(banner) do
     add(padded(banner_pad, line))
-    add_hl(#lines - 1, banner_pad, banner_pad + #line, 'LaunchpadHeader')
+    local group = i <= (#banner - 2) and 'LaunchpadHeaderTitle' or 'LaunchpadHeaderMeta'
+    add_hl(#lines - 1, banner_pad, banner_pad + #line, group)
   end
 
   -- Quote
@@ -271,9 +284,9 @@ local function build_lines(layout)
 
   -- Build left items (Quick Actions)
   local left_rows = {}
-  table.insert(left_rows, { label = 'Quick Actions' })
+  table.insert(left_rows, { label = '󰄵  Quick Actions' })
   for _, a in ipairs(M_actions) do
-    local prefix = '  ' .. a.key .. '  ' .. a.icon .. ' '
+    local prefix = '  ' .. a.key .. '  ' .. a.icon .. '  '
     local text = prefix .. a.desc
     table.insert(left_rows, {
       text           = text,
@@ -306,15 +319,16 @@ local function build_lines(layout)
     return shown
   end
 
-  table.insert(right_rows, { label = 'Recent Projects' })
+  table.insert(right_rows, { label = '󰉋  Recent Projects' })
   local projects = get_recent_projects()
   if #projects == 0 then
     table.insert(right_rows, { text = '  (no recent projects)', placeholder = true })
   else
     for _, p in ipairs(projects) do
       local shown = shorten_path(p)
+      local prefix = '  󰉋  '
       table.insert(right_rows, {
-        text           = '  ' .. shown,
+        text           = prefix .. shown,
         kind           = 'project',
         absolute       = p,
         action         = function()
@@ -333,22 +347,23 @@ local function build_lines(layout)
             pcall(vim.cmd, 'NvimTreeOpen')
           end
         end,
-        text_col_start = 2,
-        text_col_end   = 2 + #shown,
+        text_col_start = #prefix,
+        text_col_end   = #prefix + #shown,
       })
     end
   end
 
   table.insert(right_rows, { blank = true })
-  table.insert(right_rows, { label = 'Recent Files' })
+  table.insert(right_rows, { label = '󰈙  Recent Files' })
   local files = get_recent_files()
   if #files == 0 then
     table.insert(right_rows, { text = '  (no recent files)', placeholder = true })
   else
     for _, f in ipairs(files) do
       local shown = shorten_path(f)
+      local prefix = '  󰈙  '
       table.insert(right_rows, {
-        text           = '  ' .. shown,
+        text           = prefix .. shown,
         kind           = 'file',
         absolute       = f,
         action         = function()
@@ -360,8 +375,8 @@ local function build_lines(layout)
           vim.cmd('cd ' .. vim.fn.fnameescape(root))
           vim.cmd('edit ' .. vim.fn.fnameescape(f))
         end,
-        text_col_start = 2,
-        text_col_end   = 2 + #shown,
+        text_col_start = #prefix,
+        text_col_end   = #prefix + #shown,
       })
     end
   end
@@ -452,7 +467,7 @@ local function build_lines(layout)
   local git = get_git_info()
   if git then
     local branch_display = #git.branch > 30 and (git.branch:sub(1, 30) .. '…') or git.branch
-    local icon_prefix = ' '  -- nerd font git branch icon + space
+    local icon_prefix = '󰊢 '
     local dirty_mod = git.modified > 0 and ('  ~' .. git.modified) or ''
     local dirty_add = git.added > 0 and (' +' .. git.added) or ''
     local ahead     = git.ahead > 0 and (' ↑' .. git.ahead) or ''
@@ -486,7 +501,7 @@ local function build_lines(layout)
   end
   local version = vim.version()
   local nvim_str = string.format('󱓞 v%d.%d.%d', version.major, version.minor, version.patch)
-  local date_str = os.date('%Y-%m-%d %A')
+  local date_str = '󰃭 ' .. os.date('%Y-%m-%d %A')
   local system_text = (stats_str ~= '' and (stats_str .. '    ') or '')
                     .. nvim_str .. '    ' .. date_str
   local sys_row0, _ = footer_line(system_text)
@@ -588,26 +603,26 @@ end
 
 --  INTERACTION FUNCTIONS
 
--- Install Launchpad* highlight groups as links to stock groups.
--- `default = true` so user-defined overrides win.
 local function setup_highlights()
-  local links = {
-    LaunchpadHeader    = 'Title',
-    LaunchpadQuote     = 'Comment',
-    LaunchpadSection   = 'Special',
-    LaunchpadKey       = 'Constant',
-    LaunchpadAction    = 'Normal',
-    LaunchpadProject   = 'Directory',
-    LaunchpadFile      = 'String',
-    LaunchpadFooter    = 'Comment',
-    LaunchpadGitBranch = 'Constant',
-    LaunchpadGitDirty  = 'WarningMsg',
-    LaunchpadGitAhead  = 'DiffAdd',
-    LaunchpadIcon      = 'NonText',
-  }
-  for name, target in pairs(links) do
-    vim.api.nvim_set_hl(0, name, { link = target, default = true })
-  end
+  local white = '#ffffff'
+  local soft  = '#d8d8d8'
+  local dim   = '#a8a8a8'
+  local blue  = '#51afef'
+
+  vim.api.nvim_set_hl(0, 'LaunchpadHeaderFrame', { fg = dim })
+  vim.api.nvim_set_hl(0, 'LaunchpadHeaderTitle', { fg = white, bold = true })
+  vim.api.nvim_set_hl(0, 'LaunchpadHeaderMeta',  { fg = soft })
+  vim.api.nvim_set_hl(0, 'LaunchpadQuote',       { fg = dim, italic = true })
+  vim.api.nvim_set_hl(0, 'LaunchpadSection',     { fg = blue, bold = true })
+  vim.api.nvim_set_hl(0, 'LaunchpadKey',         { fg = white, bold = true })
+  vim.api.nvim_set_hl(0, 'LaunchpadAction',      { fg = soft })
+  vim.api.nvim_set_hl(0, 'LaunchpadProject',     { fg = soft })
+  vim.api.nvim_set_hl(0, 'LaunchpadFile',        { fg = soft })
+  vim.api.nvim_set_hl(0, 'LaunchpadFooter',      { fg = dim })
+  vim.api.nvim_set_hl(0, 'LaunchpadGitBranch',   { fg = white, bold = true })
+  vim.api.nvim_set_hl(0, 'LaunchpadGitDirty',    { fg = soft, bold = true })
+  vim.api.nvim_set_hl(0, 'LaunchpadGitAhead',    { fg = soft, bold = true })
+  vim.api.nvim_set_hl(0, 'LaunchpadIcon',        { fg = dim })
 end
 
 -- Return the active column's item list (left or right).
