@@ -1,14 +1,57 @@
 # DOTFILES
-# Prerequisites
- - [nvim](https://neovim.io/)
- - [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
- - [kitty](https://sw.kovidgoyal.net/kitty/)
-# How To's
+
+## Prerequisites
+
+- [nvim](https://neovim.io/)
+- [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+- [kitty](https://sw.kovidgoyal.net/kitty/)
+- [tree-sitter-cli](https://tree-sitter.github.io/tree-sitter/creating-parsers/1-getting-started.html) `0.26.1+`
+
+## Neovim Notes
+
+- This Neovim config uses `nvim-treesitter` on the Neovim `0.12` path.
+- `tree-sitter-cli` version `0.26.1` or newer is a required
+  prerequisite for parser installs and updates.
+- Some distro packages are too old. For example, Ubuntu 24.04 (`noble`)
+  currently ships `tree-sitter-cli 0.20.8`, which is too old for this setup.
+- Recommended install on systems where the distro package is too old:
+
+```bash
+npm install -g tree-sitter-cli@latest
+```
+
+- Check your version after installing:
+
+```bash
+tree-sitter --version
+```
+
+- If your distro package is new enough, you can also use it. On Debian or Ubuntu:
+
+```bash
+sudo apt-get install -y tree-sitter-cli
+```
+
+- If your distro package is older than `0.26.1`, install a newer upstream
+  release instead of using the distro package.
+- After installing it, refresh Neovim plugins and parsers:
+
+```vim
+:Lazy sync
+:TSUpdate markdown markdown_inline html
+```
+
+## How To's
+
 ## Get Started
-  1. Install prerequisites and familiarize os folder structures.
-  2. **BACKUP**  and *Delete/Rename* existing configurations for some apps you want to modify.
-  3. Generate [Symlinks](https://github.com/sanicodes/dotfiles/edit/main/README.md#how-to-create-symbolic-links-in-windows-linux-and-macos) for chosen app folders.
-  4. Check the configurations and folders. 
+
+1. Install prerequisites and familiarize os folder structures.
+2. **BACKUP** and *Delete/Rename* existing configurations for some apps you
+   want to modify.
+3. Generate
+   [Symlinks](https://github.com/sanicodes/dotfiles/edit/main/README.md#how-to-create-symbolic-links-in-windows-linux-and-macos)
+   for chosen app folders.
+4. Check the configurations and folders.
 
 ## API Keys for Minuet (Neovim)
 
@@ -52,11 +95,12 @@ If you launch Neovim from a GUI app, make sure that app inherits your shell envi
 
 - A symbolic link (also known as a symlink) is a file-system object that points to another file or directory. It allows you to access the target file or directory through the link, much like a shortcut. It makes maintaining a specific configuration to git much easier.
 ---
+
 ### Windows
 
 In Windows, symbolic links can be created using the `mklink` command in the Command Prompt.
 
-#### Steps:
+### Steps :
 
 1. **Open Command Prompt as Administrator:**
 
