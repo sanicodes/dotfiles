@@ -96,6 +96,7 @@ local M_quotes = {
 }
 local M_cfg = {
   max_projects = 5,
+  max_folders  = 5,
   max_files    = 5,
   min_width    = 60,
   max_width    = 100,
@@ -113,6 +114,9 @@ local state = {
   layout      = {},
   col_side    = 'left',
 }
+
+local folder_history_path = vim.fn.stdpath('state') .. '/launchpad-folders.json'
+local folder_history_cache = nil
 
 --  DATA FUNCTIONS
 
@@ -173,6 +177,83 @@ local function get_recent_projects()
           table.insert(results, root)
         end
       end
+    end
+  end
+  return results
+end
+
+local function normalize_dir(path)
+  local normalized = vim.fs.normalize(vim.fn.fnamemodify(path, ':p'))
+  if normalized ~= '/' then
+    normalized = normalized:gsub('/+$', '')
+  end
+  return normalized
+end
+
+local function is_non_git_dir(path)
+  if vim.fn.isdirectory(path) ~= 1 then return false end
+  return vim.fs.find('.git', { path = path, upward = true, limit = 1 })[1] == nil
+end
+
+local function load_folder_history()
+  if folder_history_cache ~= nil then
+    return vim.deepcopy(folder_history_cache)
+  end
+
+  local ok_read, lines = pcall(vim.fn.readfile, folder_history_path)
+  if not ok_read or #lines == 0 then
+    folder_history_cache = {}
+    return {}
+  end
+
+  local ok_decode, decoded = pcall(vim.json.decode, table.concat(lines, '\n'))
+  if not ok_decode or type(decoded) ~= 'table' then
+    folder_history_cache = {}
+    return {}
+  end
+
+  local results, seen = {}, {}
+  for _, path in ipairs(decoded) do
+    if type(path) == 'string' then
+      local normalized = normalize_dir(path)
+      if not seen[normalized] and is_non_git_dir(normalized) then
+        seen[normalized] = true
+        table.insert(results, normalized)
+      end
+    end
+  end
+
+  folder_history_cache = results
+  return vim.deepcopy(results)
+end
+
+local function save_folder_history(paths)
+  folder_history_cache = vim.deepcopy(paths)
+  vim.fn.mkdir(vim.fn.fnamemodify(folder_history_path, ':h'), 'p')
+  vim.fn.writefile({ vim.json.encode(paths) }, folder_history_path)
+end
+
+local function remember_folder(path)
+  local normalized = normalize_dir(path)
+  if not is_non_git_dir(normalized) then return end
+
+  local updated = { normalized }
+  for _, existing in ipairs(load_folder_history()) do
+    if existing ~= normalized then
+      table.insert(updated, existing)
+    end
+    if #updated >= M_cfg.max_folders then break end
+  end
+
+  save_folder_history(updated)
+end
+
+local function get_recent_folders()
+  local results = {}
+  for _, path in ipairs(load_folder_history()) do
+    if #results >= M_cfg.max_folders then break end
+    if is_non_git_dir(path) then
+      table.insert(results, path)
     end
   end
   return results
@@ -299,7 +380,7 @@ local function build_lines(layout)
     })
   end
 
-  -- Build right items (Recent Projects then Recent Files)
+  -- Build right items (Recent Projects, Recent Folders, then Recent Files)
   local right_rows = {}
 
   local function shorten_path(path)
@@ -342,6 +423,35 @@ local function build_lines(layout)
           local ok, api = pcall(require, 'nvim-tree.api')
           if ok then
             pcall(api.tree.change_root, p)
+            pcall(api.tree.open)
+          else
+            pcall(vim.cmd, 'NvimTreeOpen')
+          end
+        end,
+        text_col_start = #prefix,
+        text_col_end   = #prefix + #shown,
+      })
+    end
+  end
+
+  table.insert(right_rows, { blank = true })
+  table.insert(right_rows, { label = '󰉖  Recent Folders' })
+  local folders = get_recent_folders()
+  if #folders == 0 then
+    table.insert(right_rows, { text = '  (no recent folders)', placeholder = true })
+  else
+    for _, folder in ipairs(folders) do
+      local shown = shorten_path(folder)
+      local prefix = '  󰉖  '
+      table.insert(right_rows, {
+        text           = prefix .. shown,
+        kind           = 'folder',
+        absolute       = folder,
+        action         = function()
+          vim.cmd('cd ' .. vim.fn.fnameescape(folder))
+          local ok, api = pcall(require, 'nvim-tree.api')
+          if ok then
+            pcall(api.tree.change_root, folder)
             pcall(api.tree.open)
           else
             pcall(vim.cmd, 'NvimTreeOpen')
@@ -438,7 +548,9 @@ local function build_lines(layout)
       elseif rr.placeholder then
         add_hl(row1 - 1, right_byte_start, right_byte_start + #rr.text, 'LaunchpadFooter')
       elseif rr.text then
-        local group = rr.kind == 'project' and 'LaunchpadProject' or 'LaunchpadFile'
+        local group = rr.kind == 'project' and 'LaunchpadProject'
+                   or rr.kind == 'folder' and 'LaunchpadFolder'
+                   or 'LaunchpadFile'
         add_hl(row1 - 1, right_byte_start + rr.text_col_start, right_byte_start + rr.text_col_end, group)
         local right_item = {
           row      = row1,
@@ -617,6 +729,7 @@ local function setup_highlights()
   vim.api.nvim_set_hl(0, 'LaunchpadKey',         { fg = white, bold = true })
   vim.api.nvim_set_hl(0, 'LaunchpadAction',      { fg = soft })
   vim.api.nvim_set_hl(0, 'LaunchpadProject',     { fg = soft })
+  vim.api.nvim_set_hl(0, 'LaunchpadFolder',      { fg = soft })
   vim.api.nvim_set_hl(0, 'LaunchpadFile',        { fg = soft })
   vim.api.nvim_set_hl(0, 'LaunchpadFooter',      { fg = dim })
   vim.api.nvim_set_hl(0, 'LaunchpadGitBranch',   { fg = white, bold = true })
@@ -862,6 +975,8 @@ if vim.env.LAUNCHPAD_TEST then
     pick_banner       = pick_banner,
     get_recent_files     = get_recent_files,
     get_recent_projects  = get_recent_projects,
+    get_recent_folders   = get_recent_folders,
+    remember_folder      = remember_folder,
     get_git_info         = get_git_info,
     compute_layout       = compute_layout,
     build_lines          = build_lines,
@@ -870,10 +985,21 @@ end
 
 --  MODULE-LOAD INITIALIZATION
 setup_highlights()
+remember_folder(vim.fn.getcwd())
 
 vim.api.nvim_create_autocmd('ColorScheme', {
   group = vim.api.nvim_create_augroup('LaunchpadHighlights', { clear = true }),
   callback = setup_highlights,
+})
+
+vim.api.nvim_create_autocmd('DirChanged', {
+  callback = function(args)
+    remember_folder(args.file)
+    if state.buf and state.buf == vim.api.nvim_get_current_buf() then
+      render()
+      snap_to_item()
+    end
+  end,
 })
 
 vim.api.nvim_create_autocmd('VimEnter', {
