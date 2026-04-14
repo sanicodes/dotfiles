@@ -1047,6 +1047,28 @@ vim.api.nvim_create_autocmd('VimEnter', {
   callback = maybe_open,
 })
 
+-- When the user closes the last real buffer (e.g. via bufferline's `:bdelete`),
+-- fall back to the launchpad instead of being left staring at a blank `[No Name]`.
+vim.api.nvim_create_autocmd('BufDelete', {
+  callback = function(args)
+    if vim.v.exiting ~= vim.NIL then return end
+    local closing = args.buf
+    vim.schedule(function()
+      if vim.v.exiting ~= vim.NIL then return end
+      for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+        if buf ~= closing
+          and vim.api.nvim_buf_is_valid(buf)
+          and vim.bo[buf].buflisted
+          and not is_launchpad_buf(buf)
+        then
+          return
+        end
+      end
+      open()
+    end)
+  end,
+})
+
 vim.api.nvim_create_user_command('Launchpad', open, {
   desc = 'Open the launchpad dashboard',
 })
