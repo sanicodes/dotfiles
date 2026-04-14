@@ -910,25 +910,42 @@ local function setup_autocmds(buf)
     group = group, buffer = buf,
     callback = function()
       pcall(vim.api.nvim_del_augroup_by_id, group)
-      state.buf = nil
-      state.win = nil
-      state.col_side = 'left'
+      -- Reopening Launchpad from an existing Launchpad buffer can wipe the old
+      -- scratch buffer after the new one is already active. Only clear global
+      -- state when the buffer being wiped is still the live dashboard buffer.
+      if state.buf == buf then
+        state.buf = nil
+        state.win = nil
+        state.col_side = 'left'
+      end
     end,
   })
 end
 
 --  ENTRY POINTS
-local function open()
-  local buf = vim.api.nvim_create_buf(false, true)
-  vim.bo[buf].bufhidden = 'wipe'
-  vim.bo[buf].buftype   = 'nofile'
-  vim.bo[buf].swapfile  = false
-  vim.bo[buf].filetype  = 'launchpad'
-  vim.api.nvim_buf_set_name(buf, 'Launchpad')
+local function is_launchpad_buf(buf)
+  return buf
+    and vim.api.nvim_buf_is_valid(buf)
+    and vim.bo[buf].filetype == 'launchpad'
+end
 
-  vim.api.nvim_set_current_buf(buf)
+local function find_visible_launchpad()
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    local buf = vim.api.nvim_win_get_buf(win)
+    if is_launchpad_buf(buf) then
+      return buf, win
+    end
+  end
+end
+
+local function show(buf, win)
+  vim.api.nvim_set_current_win(win)
+  if vim.api.nvim_win_get_buf(win) ~= buf then
+    vim.api.nvim_win_set_buf(win, buf)
+  end
+
   state.buf = buf
-  state.win = vim.api.nvim_get_current_win()
+  state.win = win
 
   vim.wo[state.win].number         = false
   vim.wo[state.win].relativenumber = false
@@ -954,6 +971,30 @@ local function open()
   if list[1] then
     vim.api.nvim_win_set_cursor(state.win, { list[1].row, list[1].col })
   end
+end
+
+local function open()
+  local win = vim.api.nvim_get_current_win()
+  local current_buf = vim.api.nvim_get_current_buf()
+  if is_launchpad_buf(current_buf) then
+    show(current_buf, win)
+    return
+  end
+
+  local visible_buf = find_visible_launchpad()
+  if visible_buf then
+    show(visible_buf, win)
+    return
+  end
+
+  local buf = vim.api.nvim_create_buf(false, true)
+  vim.bo[buf].bufhidden = 'wipe'
+  vim.bo[buf].buftype   = 'nofile'
+  vim.bo[buf].swapfile  = false
+  vim.bo[buf].filetype  = 'launchpad'
+  vim.api.nvim_buf_set_name(buf, 'Launchpad')
+
+  show(buf, win)
 end
 
 -- VimEnter startup gate: open the dashboard only when nvim was invoked with
