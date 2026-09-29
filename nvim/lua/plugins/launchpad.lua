@@ -947,14 +947,16 @@ local function show(buf, win)
   state.buf = buf
   state.win = win
 
-  vim.wo[state.win].number         = false
-  vim.wo[state.win].relativenumber = false
-  vim.wo[state.win].cursorline     = false
-  vim.wo[state.win].cursorcolumn   = false
-  vim.wo[state.win].signcolumn     = 'no'
-  vim.wo[state.win].foldcolumn     = '0'
-  vim.wo[state.win].list           = false
-  vim.wo[state.win].wrap           = false
+  -- [0] = setlocal: plain vim.wo[win] also sets the window's global value, so
+  -- files later opened in this window would inherit no numbers/signs.
+  vim.wo[state.win][0].number         = false
+  vim.wo[state.win][0].relativenumber = false
+  vim.wo[state.win][0].cursorline     = false
+  vim.wo[state.win][0].cursorcolumn   = false
+  vim.wo[state.win][0].signcolumn     = 'no'
+  vim.wo[state.win][0].foldcolumn     = '0'
+  vim.wo[state.win][0].list           = false
+  vim.wo[state.win][0].wrap           = false
 
   state.col_side = 'left'
   render()
