@@ -11,6 +11,16 @@ return {
       statusline.section_location = function()
         return '%2l:%-2v'
       end
+
+      local map = require 'mini.map'
+      map.setup {
+        integrations = {
+          map.gen_integration.builtin_search(),
+          map.gen_integration.gitsigns(),
+          map.gen_integration.diagnostic(),
+        },
+      }
+      vim.keymap.set('n', '<leader>mm', map.toggle, { desc = 'Toggle [M]ini[M]ap' })
     end,
   },
 }
